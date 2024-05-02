@@ -296,6 +296,8 @@ milestone_token_x = 55;
 milestone_token_y = 18;
 milestone_token_d = 23;
 
+discovery_clerance = 1.5;
+
 milestone_symbol_l = 55;
 milestone_symbol_w = 18;
 milestone_symbol_w_d = 23;
@@ -310,43 +312,104 @@ discovery_cavetto_r = 5;
 discovery_ratio = 0.5;
 discovery_tray_l = card_box_l-resource_l-player_tray_l-phase_tray_l;
 discovery_tray_w = box_w - box_clearance_w - card_box_w;
-discovery_tray_h = phase_tray_h;
+discovery_tray_h = milestone_token_d + ocean_hex_clearance + bottom;
+
+module forest_hex_5_block(h=10){
+    cylinder(r=forest_hex_5_r, h=h, $fn=6);
+}
+module forest_hex_1_block(h=10){
+    rotate([0,0,90]) cylinder(r=forest_hex_1_r, h=h, $fn=6);
+}
+
 module discovery_tray(){
     difference(){
         cube_rounded([discovery_tray_l, discovery_tray_w, discovery_tray_h]);
         minko_3_l = discovery_tray_l-2*(walls+discovery_cavetto_r);
         // award marker
-        award_w = discovery_tray_w*(1-discovery_ratio)-2*walls-2*discovery_cavetto_r;
-        translate([walls+discovery_cavetto_r, walls+discovery_cavetto_r, bottom+discovery_cavetto_r]) minkowski(){
-            cube([discovery_tray_l-2*(walls+discovery_cavetto_r), award_w, discovery_tray_h]);
-            sphere(r=discovery_cavetto_r);
+
+        award_w = discovery_tray_w*(1-discovery_ratio)-2*walls-2*discovery_clerance;
+        // translate([walls+discovery_cavetto_r, walls+discovery_cavetto_r, bottom+discovery_cavetto_r]) minkowski(){
+        //     cube([discovery_tray_l-2*(walls+discovery_cavetto_r), award_w, discovery_tray_h]);
+        //     sphere(r=discovery_cavetto_r);
+        // }
+        translate([walls + 24, discovery_tray_w, 0]) union() {  // TODO Do not harcode that 24
+            translate([-award_symbol_l2/2, - (award_symbol_w2 + walls*3 + discovery_clerance), bottom + discovery_clerance]) minkowski() {
+                union() {
+                    award_pattern(discovery_tray_h - bottom - discovery_clerance);
+                    translate([award_symbol_l2/2 - award_symbol_w_d/2 + discovery_clerance, award_symbol_w2, 0]) cube([award_symbol_w_d - discovery_clerance*2, walls*3 + discovery_clerance, discovery_tray_h - bottom - discovery_clerance]);
+                }
+                sphere(r=discovery_clerance);
+            }
+            translate([0,0,-preview_adjustment]) cylinder(h = bottom + preview_adjustment * 2, r = award_symbol_w_d/2 - discovery_clerance);
         }
-        translate([discovery_tray_l/2-award_symbol_l2/2, (award_w+2*walls+2*discovery_cavetto_r-award_symbol_w3)/2, bottom - layer_height]) award_pattern();
+        
+        // translate([discovery_tray_l / 2 - 10, -preview_adjustment , bottom])  cube([20, 10, discovery_tray_h - bottom + preview_adjustment]);
+        // translate([discovery_tray_l / 2, 0 ,-preview_adjustment])  cylinder(h = bottom + preview_adjustment * 2, r = 10);
+        
         // milestone marker
+
         milestone_w = discovery_tray_w*discovery_ratio-walls-2*discovery_cavetto_r;
-        translate([walls+discovery_cavetto_r, discovery_tray_w-milestone_w-walls-discovery_cavetto_r, bottom+discovery_cavetto_r]) minkowski(){
-            cube([discovery_tray_l-2*(walls+discovery_cavetto_r), milestone_w, discovery_tray_h]);
-            sphere(r=discovery_cavetto_r);
+        // translate([walls+discovery_cavetto_r, discovery_tray_w-milestone_w-walls-discovery_cavetto_r, bottom+discovery_cavetto_r]) minkowski(){
+        //     cube([discovery_tray_l-2*(walls+discovery_cavetto_r), milestone_w, discovery_tray_h]);
+        //     sphere(r=discovery_cavetto_r);
+        // }
+        
+        translate([(discovery_tray_l-milestone_symbol_l)/2, walls + discovery_clerance, bottom + discovery_clerance]) minkowski() {
+            union() {
+                milestone_pattern(discovery_tray_h - (bottom + discovery_clerance));
+                translate([milestone_symbol_l/2 - milestone_symbol_w_d/2 + discovery_clerance, -walls - discovery_clerance, 0]) cube([milestone_symbol_w_d - discovery_clerance*2, walls + discovery_clerance, discovery_tray_h - bottom - discovery_clerance]); 
+            }
+            sphere(r=discovery_clerance);
         }
-        //translate([(discovery_tray_l-milestone_symbol_l)/2, discovery_tray_w-(milestone_w-walls-2*discovery_cavetto_r)-milestone_symbol_w/2, bottom - layer_height]) milestone_pattern();
+        translate([discovery_tray_l / 2, 0 ,-preview_adjustment])  cylinder(h = bottom + preview_adjustment * 2, r = milestone_symbol_w_d/2 - discovery_clerance);
+
+        // symbol tray
+        // symbol_w = 22;
+        // symbol_offset = -6;
+        // translate([walls + discovery_cavetto_r, discovery_tray_w/2 - symbol_w/2 + symbol_offset, bottom + discovery_cavetto_r]) minkowski(){
+        //     cube([discovery_tray_l- 2*walls - discovery_cavetto_r * 2, symbol_w, discovery_tray_h - bottom - discovery_cavetto_r]);
+        //     sphere(r=discovery_cavetto_r);
+        // }
+
+        // forest 1 tray
+        forest_1_tray_l = 33.3 + 3; // Clearance
+        center_tray_offset = (discovery_tray_l - (walls*2 + discovery_clerance)*2 - forest_1_tray_l)/2;
+        translate([walls*2 + discovery_clerance, milestone_w + walls*2, bottom + forest_hex_1_r + discovery_clerance]) minkowski(){
+            union() {
+                    translate([center_tray_offset,0,0]) rotate([0,90,0])  forest_hex_1_block(forest_1_tray_l);
+                    translate([0,-forest_hex_1_r]) cube([discovery_tray_l - (walls*2 + discovery_clerance)*2, forest_hex_1_r * 2, 20]);
+                }
+            sphere(r=discovery_clerance);
+        }
+
+        // forest 5 tray
+        translate([discovery_tray_l - (walls + forest_hex_5_r + discovery_clerance) + 1, discovery_tray_w - (walls + forest_hex_5_r + discovery_clerance + 10), bottom + discovery_clerance]) minkowski(){
+            union() {
+                forest_hex_5_block(discovery_tray_h - bottom);
+                translate([0,-6]) cube([20, 12, discovery_tray_h - bottom - discovery_clerance]);
+            }
+            sphere(r=discovery_clerance);
+        }
+        translate([discovery_tray_l, discovery_tray_w - (walls + forest_hex_5_r + discovery_clerance + 10), - preview_adjustment]) cylinder(r = 6, h=discovery_tray_h + preview_adjustment*2);
     }
 }
-module award_pattern(){
-    translate([0,0,0]) union(){
-        cube_rounded([award_symbol_l2,award_symbol_w2,10], 2);
-        translate([(award_symbol_l2-award_symbol_l1)/2,award_symbol_w2-award_symbol_w1,0]) intersection(){
-            translate([0,-10,0]) cube([award_symbol_l1,award_symbol_w1+10,10]);
-            translate([0,-award_symbol_w1+7.5,0]) cube_rounded([award_symbol_l1,award_symbol_w1+10,10],3);
-        }
-        translate([(award_symbol_l1_5-award_symbol_l1)/2,award_symbol_w2-13,0]) cube_rounded([award_symbol_l1_5,13,10],3);
-        translate([award_symbol_l2/2,award_symbol_w2+(award_symbol_w3-award_symbol_w2)-award_symbol_w_d/2,0]) cylinder(h=10, r=award_symbol_w_d/2);
-    }
-}
-module milestone_pattern(){
+module award_pattern(h=30){
     union(){
-        cube_rounded([milestone_symbol_l,milestone_symbol_w,10],1);
-        translate([milestone_symbol_l/2,milestone_symbol_w/2,0]) cylinder(h=10,r=milestone_symbol_w_d/2);
+        cube_rounded([award_symbol_l2,award_symbol_w2,h], 2);
+        translate([(award_symbol_l2-award_symbol_l1)/2,award_symbol_w2-award_symbol_w1,0]) intersection(){
+            translate([0,-10,0]) cube([award_symbol_l1,award_symbol_w1+10,h]);
+            translate([0,-award_symbol_w1+7.5,0]) cube_rounded([award_symbol_l1,award_symbol_w1+10,h],3);
+        }
+        translate([(award_symbol_l1_5-award_symbol_l1)/2,award_symbol_w2-13,0]) cube_rounded([award_symbol_l1_5,13,h],3);
+        translate([award_symbol_l2/2,award_symbol_w2+(award_symbol_w3-award_symbol_w2)-award_symbol_w_d/2,0]) cylinder(h=h, r=award_symbol_w_d/2);
     }
+}
+module milestone_pattern(h=30){
+    union(){
+        cube_rounded([milestone_symbol_l,milestone_symbol_w,h],1);
+        translate([milestone_symbol_l/2,milestone_symbol_w/2,0]) cylinder(h=h,r=milestone_symbol_w_d/2);
+    }
+    
 }
 
 // forest tray
@@ -401,7 +464,7 @@ crisis_card_deck = 70;
 if(assembly){
     color("darkorange") card_box(main_card_deck, [20, 50]);   // TODO Separator length are placeholders
     color("orange") translate([main_card_deck,0,0]) card_box(secondary_card_deck);
-    color("lightorange") translate([card_box_l - crisis_card_deck,card_box_w,0]) card_box(crisis_card_deck);
+    color("red") translate([card_box_l - crisis_card_deck,card_box_w,0]) card_box(crisis_card_deck);
     
     color("turquoise") translate([card_box_l-resource_l-player_tray_l,card_box_w,0]) player_tray();
     color("crimson") translate([0,card_box_w,0]) crisis_tray();
@@ -414,4 +477,6 @@ if(assembly){
     color("silver") translate([card_box_l-resource_l,-card_box_w,resource_tray_height(resource_h_gold)]) resource_tray_silver();
     color("peru") translate([card_box_l-resource_l,-card_box_w,resource_tray_height(resource_h_gold)+resource_tray_height(resource_h_silver)]) resource_tray_bronze();
     color("plum") translate([card_box_l-resource_l,-card_box_w,resource_tray_height(resource_h_gold)+resource_tray_height(resource_h_silver)+resource_tray_height(resource_h_bronze,2)]) symbol_tray();
+} else {
+    discovery_tray();
 }
