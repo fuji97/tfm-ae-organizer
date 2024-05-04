@@ -19,6 +19,8 @@ bottom_layers = 4;
 walls = walls_lanes*nozzle;
 bottom = bottom_layers*layer_height;
 
+
+
 // helper modules
 preview_adjustment = 1;
 module cube_rounded(v, r=3, center=false){
@@ -46,6 +48,8 @@ card_box_corners = 2;
 card_box_handle_h = card_box_h + 20;
 card_box_hole_r = 30;
 card_box_hole_offset = 0;
+player_mini_tray_l = 46;
+player_mini_tray_w = (box_w - box_clearance_w - card_box_w)/3;
 module card_box(length=card_box_l, separators=[]){
     union() {
         difference(){
@@ -310,7 +314,9 @@ award_symbol_w3 = 34;
 award_symbol_w_d = milestone_symbol_w_d;
 discovery_cavetto_r = 5;
 discovery_ratio = 0.5;
-discovery_tray_l = card_box_l-resource_l-player_tray_l-phase_tray_l;
+discovery_tray_l = card_box_l-resource_l-player_mini_tray_l-phase_tray_l;
+milestone_symbol_w_circle_offset = (milestone_symbol_w_d - milestone_symbol_w)/2;
+// discovery_tray_l = card_box_l-resource_l-player_tray_l-phase_tray_l;
 discovery_tray_w = box_w - box_clearance_w - card_box_w;
 discovery_tray_h = milestone_token_d + ocean_hex_clearance + bottom;
 
@@ -332,7 +338,7 @@ module discovery_tray(){
         //     cube([discovery_tray_l-2*(walls+discovery_cavetto_r), award_w, discovery_tray_h]);
         //     sphere(r=discovery_cavetto_r);
         // }
-        translate([walls + 24, discovery_tray_w, 0]) union() {  // TODO Do not harcode that 24
+        translate([walls + 24, discovery_tray_w + walls, 0]) union() {  // TODO Do not harcode that 24
             translate([-award_symbol_l2/2, - (award_symbol_w2 + walls*3 + discovery_clerance), bottom + discovery_clerance]) minkowski() {
                 union() {
                     award_pattern(discovery_tray_h - bottom - discovery_clerance);
@@ -353,8 +359,9 @@ module discovery_tray(){
         //     cube([discovery_tray_l-2*(walls+discovery_cavetto_r), milestone_w, discovery_tray_h]);
         //     sphere(r=discovery_cavetto_r);
         // }
-        
-        translate([(discovery_tray_l-milestone_symbol_l)/2, walls + discovery_clerance, bottom + discovery_clerance]) minkowski() {
+
+        milestone_tray_y_offset = walls + discovery_clerance - milestone_symbol_w_circle_offset + 1;
+        translate([(discovery_tray_l-milestone_symbol_l)/2, milestone_tray_y_offset, bottom + discovery_clerance]) minkowski() {
             union() {
                 milestone_pattern(discovery_tray_h - (bottom + discovery_clerance));
                 translate([milestone_symbol_l/2 - milestone_symbol_w_d/2 + discovery_clerance, -walls - discovery_clerance, 0]) cube([milestone_symbol_w_d - discovery_clerance*2, walls + discovery_clerance, discovery_tray_h - bottom - discovery_clerance]); 
@@ -372,9 +379,10 @@ module discovery_tray(){
         // }
 
         // forest 1 tray
+        forest_1_tray_y_offset = milestone_w + walls + milestone_tray_y_offset;
         forest_1_tray_l = 33.3 + 3; // Clearance
         center_tray_offset = (discovery_tray_l - (walls*2 + discovery_clerance)*2 - forest_1_tray_l)/2;
-        translate([walls*2 + discovery_clerance, milestone_w + walls*2, bottom + forest_hex_1_r + discovery_clerance]) minkowski(){
+        translate([walls*2 + discovery_clerance, forest_1_tray_y_offset, bottom + forest_hex_1_r + discovery_clerance]) minkowski(){
             union() {
                     translate([center_tray_offset,0,0]) rotate([0,90,0])  forest_hex_1_block(forest_1_tray_l);
                     translate([0,-forest_hex_1_r]) cube([discovery_tray_l - (walls*2 + discovery_clerance)*2, forest_hex_1_r * 2, 20]);
@@ -383,14 +391,16 @@ module discovery_tray(){
         }
 
         // forest 5 tray
-        translate([discovery_tray_l - (walls + forest_hex_5_r + discovery_clerance) + 1, discovery_tray_w - (walls + forest_hex_5_r + discovery_clerance + 10), bottom + discovery_clerance]) minkowski(){
+        //translate([discovery_tray_l - (walls + forest_hex_5_r + discovery_clerance) + 3, discovery_tray_w - (walls + forest_hex_5_r + discovery_clerance + 12), bottom + discovery_clerance]) minkowski(){
+        forest_hex_5_tray_y = forest_1_tray_y_offset + walls + discovery_clerance*2 + forest_hex_1_r*2 + 1; // TODO 1 is a random offset
+        translate([discovery_tray_l - (walls + forest_hex_5_r + discovery_clerance) + 2, forest_hex_5_tray_y, bottom + discovery_clerance]) minkowski(){
             union() {
                 forest_hex_5_block(discovery_tray_h - bottom);
                 translate([0,-6]) cube([20, 12, discovery_tray_h - bottom - discovery_clerance]);
             }
             sphere(r=discovery_clerance);
         }
-        translate([discovery_tray_l, discovery_tray_w - (walls + forest_hex_5_r + discovery_clerance + 10), - preview_adjustment]) cylinder(r = 6, h=discovery_tray_h + preview_adjustment*2);
+        translate([discovery_tray_l, forest_hex_5_tray_y, - preview_adjustment]) cylinder(r = 6, h=discovery_tray_h + preview_adjustment*2);
     }
 }
 module award_pattern(h=30){
@@ -405,7 +415,7 @@ module award_pattern(h=30){
     }
 }
 module milestone_pattern(h=30){
-    union(){
+    translate([0,milestone_symbol_w_circle_offset,0]) union(){
         cube_rounded([milestone_symbol_l,milestone_symbol_w,h],1);
         translate([milestone_symbol_l/2,milestone_symbol_w/2,0]) cylinder(h=h,r=milestone_symbol_w_d/2);
     }
@@ -455,6 +465,37 @@ module forest_hex_1_pattern(){
     }
 }
 
+module money_tray(){
+    difference(){
+        cube_rounded([forest_tray_l, forest_tray_w, forest_tray_h]);
+    }
+}
+
+module player_mini_tray() {
+    player_s = 8;
+    player_w = player_s * 5;
+    player_l = player_s * 3;
+    player_h = 8;
+    height_clearance = 1;
+    cavetto_r = 1.5;
+
+    // tray_l = player_w + cavetto_r*2 + walls*2;
+    // tray_w = player_l + cavetto_r*2 + walls*2;
+    tray_h = player_h + cavetto_r*2 + bottom + height_clearance;
+
+    tray_l = player_mini_tray_l;
+    tray_w = player_mini_tray_w;
+
+    difference() {
+        cube_rounded([tray_l, tray_w, tray_h]);
+        translate([walls + cavetto_r, walls + cavetto_r, bottom + preview_adjustment]) minkowski() {
+            cube([player_w, player_l, player_h + height_clearance + cavetto_r]);
+            sphere(r=cavetto_r);
+        }
+    
+    }
+}
+
 // Values
 secondary_card_deck = 135 + walls * 2;
 main_card_deck = card_box_l - secondary_card_deck;
@@ -466,11 +507,11 @@ if(assembly){
     color("orange") translate([main_card_deck,0,0]) card_box(secondary_card_deck);
     color("red") translate([card_box_l - crisis_card_deck,card_box_w,0]) card_box(crisis_card_deck);
     
-    color("turquoise") translate([card_box_l-resource_l-player_tray_l,card_box_w,0]) player_tray();
+    color("turquoise") translate([card_box_l-resource_l-player_mini_tray_l,card_box_w,0]) player_mini_tray();
     color("crimson") translate([0,card_box_w,0]) crisis_tray();
     color("midnightblue") translate([card_box_l-resource_l-player_tray_l-phase_tray_l,card_box_w,crisis_tray_h]) phase_tray();
     color("khaki") translate([card_box_l-resource_l-player_tray_l-phase_tray_l-discovery_tray_l,card_box_w,crisis_tray_h]) discovery_tray();
-    //color("salmon") translate([card_box_l-resource_l-player_tray_l-phase_tray_l-discovery_tray_l,card_box_w,crisis_tray_h+discovery_tray_h]) forest_tray();
+    //color("salmon") translate([card_box_l-resource_l-player_tray_l-phase_tray_l-discovery_tray_l,card_box_w,crisis_tray_h+discovery_tray_h]) money_tray();
 
     // TODO: change
     color("gold") translate([card_box_l-resource_l,-card_box_w,0]) resource_tray_gold();
@@ -479,4 +520,5 @@ if(assembly){
     color("plum") translate([card_box_l-resource_l,-card_box_w,resource_tray_height(resource_h_gold)+resource_tray_height(resource_h_silver)+resource_tray_height(resource_h_bronze,2)]) symbol_tray();
 } else {
     discovery_tray();
+    //milestone_pattern();
 }
