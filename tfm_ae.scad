@@ -10,19 +10,27 @@ preview_adjustment = $preview ? 0.1 : 0;
 Show = "all"; // [all, card_box_main, card_box_secondary, card_box_crisis, player_tray, player_trays, crisis_tray, discovery_tray, phase_tray, symbols_and_markers_tray, resource_tray_gold, resource_tray_silver, resource_tray_bronze]
 
 /* [Printer] */
-layer_height = 0.2;
+// Layer height
+layer_height = 0.2; 
+// Nozzle diameter
 nozzle = 0.4;
+// Number of wall layers
 walls_lanes = 3;
+// Number of bottom layers
 bottom_layers = 4;
 walls = walls_lanes*nozzle;
 bottom = bottom_layers*layer_height;
 
 /* [Box] */
+// Box width
 box_w = 191;
+// Box length
 box_l = 240;
+// Box height
 box_h = 72;
-
+// Box length clearance
 box_clearance_l = 1.5;
+// Box width clearance
 box_clearance_w = 2;
 
 container_w = box_w - box_clearance_w;
@@ -405,7 +413,7 @@ module money_tray(){
 }
 
 // player tray
-
+// TODO Implement drawer for player tray (needs test before)
 module player_tray() {
     tray_h = player_tray_h;
     tray_l = player_tray_l;
@@ -480,6 +488,7 @@ module resource_tray(size_percentage){
             cube([tray_l-2*(walls+resource_cavetto_r), resource_tray_w-2*(walls+resource_cavetto_r), resource_tray_h]);
             sphere(r=resource_cavetto_r);
         }
+        // TODO Maybe refactor and re-enable this
         // translate([
         //     (tray_l - h*resource_pattern_l_count - h/2*(resource_pattern_l_count-1))/2,
         //     (resource_tray_w - h*resource_pattern_w_count - h/2*(resource_pattern_w_count-1))/2,
