@@ -42,10 +42,10 @@ player_h = 8;
 player_height_clearance = 3;
 player_cavetto_r = 1.5;
 
-player_mini_tray_l = 46;
-player_mini_tray_w = (container_w - card_box_w)/3;
-player_mini_tray_h = player_h + player_cavetto_r*2 + bottom + player_height_clearance;
-player_mini_trays_h = player_mini_tray_h*2;
+player_tray_l = 46;
+player_tray_w = (container_w - card_box_w)/3;
+player_tray_h = player_h + player_cavetto_r*2 + bottom + player_height_clearance;
+player_trays_h = player_tray_h*2;
 
 // ocean
 ocean_hex = 33.5;
@@ -60,7 +60,7 @@ forest_hex_1 = 19.70;
 forest_hex_1_r = ((forest_hex_1/2)/cos(30));
 
 // crisis tray
-crisis_tray_l = container_l - card_box_crisis_l - player_mini_tray_l;
+crisis_tray_l = container_l - card_box_crisis_l - player_tray_l;
 crisis_tray_w = container_w - card_box_w;
 crisis_tray_h = ocean_hex_h + ocean_hex_clearance + bottom;
 
@@ -78,7 +78,7 @@ milestone_token_x = 55;
 milestone_token_y = 18;
 milestone_token_d = 23;
 
-discovery_tray_l = container_l - card_box_crisis_l - player_mini_tray_l - phase_tray_l;
+discovery_tray_l = container_l - card_box_crisis_l - player_tray_l - phase_tray_l;
 discovery_tray_w = container_w - card_box_w;
 discovery_tray_h = milestone_token_d + ocean_hex_clearance + bottom; 
 
@@ -86,9 +86,9 @@ discovery_tray_h = milestone_token_d + ocean_hex_clearance + bottom;
 layer_2_height = max([discovery_tray_h, phase_tray_h]);
 
 // symbols and markers tray
-symbols_and_markers_tray_l = player_mini_tray_l;
+symbols_and_markers_tray_l = player_tray_l;
 symbols_and_markers_tray_w = crisis_tray_w;
-symbols_and_markers_tray_h = (crisis_tray_h + layer_2_height) - player_mini_trays_h;
+symbols_and_markers_tray_h = (crisis_tray_h + layer_2_height) - player_trays_h;
 
 // resource trays
 resource_tray_l = container_l - card_box_crisis_l;
@@ -497,10 +497,10 @@ module money_tray(){
 
 // player mini tray
 
-module player_mini_tray() {
-    tray_h = player_mini_tray_h;
-    tray_l = player_mini_tray_l;
-    tray_w = player_mini_tray_w;
+module player_tray() {
+    tray_h = player_tray_h;
+    tray_l = player_tray_l;
+    tray_w = player_tray_w;
     cavetto_r = player_cavetto_r;
     height_clearance = player_height_clearance;
 
@@ -514,10 +514,10 @@ module player_mini_tray() {
     }
 }
 
-module player_mini_trays() {
+module player_trays() {
     for (i = [0:1]) {
       for (j = [0:2]) {
-        translate([0, player_mini_tray_w * j, (player_mini_tray_h) * i]) player_mini_tray();
+        translate([0, player_tray_w * j, (player_tray_h) * i]) player_tray();
       }
     }
 }
@@ -615,12 +615,12 @@ if(assembly){
     color("orange") translate([card_box_main_l,0,0]) card_box_secondary();
     color("red") translate([container_l - card_box_crisis_l, card_box_w, 0]) card_box_crisis();
     
-    color("turquoise") translate([crisis_tray_l,card_box_w,0]) player_mini_trays();
+    color("turquoise") translate([crisis_tray_l,card_box_w,0]) player_trays();
     color("crimson") translate([0,card_box_w,0]) crisis_tray();
     color("khaki") translate([0,card_box_w,crisis_tray_h]) discovery_tray();
     color("midnightblue") translate([discovery_tray_l,card_box_w,crisis_tray_h]) phase_tray();
     //color("salmon") translate([card_box_l-resource_l-player_tray_l-phase_tray_l-discovery_tray_l,card_box_w,crisis_tray_h+discovery_tray_h]) money_tray();
-    color("salmon") translate([crisis_tray_l,card_box_w,player_mini_trays_h]) symbols_and_markers_tray();
+    color("salmon") translate([crisis_tray_l,card_box_w,player_trays_h]) symbols_and_markers_tray();
 
     layer_3_offset = crisis_tray_h + layer_2_height;
     color("gold") translate([0,card_box_w,layer_3_offset]) resource_tray_gold();
