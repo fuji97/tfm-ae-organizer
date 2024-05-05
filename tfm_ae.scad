@@ -7,7 +7,7 @@ $fn = $preview ? 32 : 64;
 preview_adjustment = $preview ? 0.1 : 0;
 
 // Show the selected module
-Show = "all"; // [all, card_box_main, card_box_secondary, card_box_crisis, player_tray, player_trays, crisis_tray, discovery_tray, phase_tray, symbols_and_markers_tray, resource_tray_gold, resource_tray_silver, resource_tray_bronze]
+Show = "all"; // [all, card_box_main, card_box_secondary, card_box_crisis, player_tray, player_trays, crisis_tray, discovery_tray, phase_tray, symbols_and_markers_tray, resource_tray_gold, resource_tray_silver, resource_tray_bronze, resource_drawer]
 
 /* [Printer] */
 // Layer height
@@ -121,7 +121,7 @@ module cube_rounded(v, r=3, center=false){
 // Separator
 card_box_hole_offset = 0;
 card_box_hole_r = 30;
-module separator(distance=0){   // TODO: Refactor this
+module separator(distance=0){
     translate([walls + distance, walls, bottom]) difference(){
         cube([walls,card_box_w-2*walls,container_h]);
         translate([-preview_adjustment,card_box_w/2,container_h-card_box_hole_offset]) rotate([0,90,0]) cylinder(h=card_box_w+2*preview_adjustment,r=card_box_hole_r);
@@ -309,7 +309,7 @@ module discovery_tray(){
         translate([(discovery_tray_l-milestone_symbol_l)/2, milestone_tray_y_offset, bottom + discovery_clerance]) minkowski() {
             union() {
                 milestone_pattern(layer_2_height - (bottom + discovery_clerance));
-                translate([milestone_symbol_l/2 - milestone_symbol_w_d/2 + discovery_clerance, -walls - discovery_clerance, 0]) cube([milestone_symbol_w_d - discovery_clerance*2, walls + discovery_clerance, discovery_tray_h - bottom - discovery_clerance]); 
+                translate([milestone_symbol_l/2 - milestone_symbol_w_d/2 + discovery_clerance, -walls - discovery_clerance, 0]) cube([milestone_symbol_w_d - discovery_clerance*2, walls + discovery_clerance + 3, discovery_tray_h - bottom - discovery_clerance]); 
             }
             sphere(r=discovery_clerance);
         }
@@ -512,17 +512,28 @@ module resource_tray_pattern_random(h){
     }
 }
 
-bronze_p = 0.5;
+bronze_p = 0.45;
 module resource_tray_bronze(){
     resource_tray(bronze_p);
 }
-silver_p = 0.2;
+silver_p = 0.25;
 module resource_tray_silver(){
     resource_tray(silver_p);
 }
 gold_p = 0.3;
 module resource_tray_gold(){
     resource_tray(gold_p);
+}
+
+module resource_drawer() {
+    drawer_l = resource_tray_l + walls*2;
+    drawer_w = resource_tray_w + walls;
+    drawer_h = resource_tray_h + bottom*2;
+    difference(){
+        cube_rounded([drawer_l, drawer_w, drawer_h]);
+        translate([walls, -preview_adjustment, bottom]) cube_rounded([resource_tray_l, resource_tray_w + preview_adjustment, resource_tray_h]);
+        
+    }
 }
 
 // assembly
@@ -591,4 +602,8 @@ if(Show == "resource_tray_silver"){
 
 if(Show == "resource_tray_bronze"){
     color("peru") resource_tray_bronze();
+}
+
+if(Show == "resource_drawer"){
+    color("peru") resource_drawer();
 }
