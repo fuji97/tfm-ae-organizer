@@ -7,7 +7,7 @@ $fn = $preview ? 32 : 64;
 preview_adjustment = $preview ? 0.1 : 0;
 
 // Show the selected module
-Show = "all"; // [all, card_box_main, card_box_secondary, card_box_crisis, player_tray, player_trays, crisis_tray, discovery_tray, phase_tray, symbols_and_markers_tray, resource_tray_gold, resource_tray_silver, resource_tray_bronze, resource_drawer]
+Show = "all"; // [all, card_box_main, card_box_secondary, card_box_crisis, player_tray, player_trays, players_drawer, crisis_tray, discovery_tray, phase_tray, symbols_and_markers_tray, resource_tray_gold, resource_tray_silver, resource_tray_bronze, resource_drawer]
 
 /* [Printer] */
 // Layer height
@@ -27,7 +27,7 @@ box_w = 191;
 // Box length
 box_l = 240;
 // Box height
-box_h = 72;
+box_h = 74;
 // Box length clearance
 box_clearance_l = 1.5;
 // Box width clearance
@@ -39,7 +39,7 @@ container_h = box_h;
 
 /* [General] [Cards] */
 card_w = 64;
-card_h = 89;
+card_h = 90.5;
 card_clearance_w = 1.5;
 
 /* [General] [Ocean] */
@@ -68,10 +68,15 @@ player_h = 8;
 player_height_clearance = 4;
 player_cavetto_r = 2;
 
-player_tray_l = 46;
-player_tray_w = (container_w - card_box_w)/3;
+player_drawer_w = container_w - card_box_w;
+player_drawer_l = 46;
+
+player_tray_l = player_drawer_l - walls;
+player_tray_w = (player_drawer_w - walls*2)/3 - 0.1; // Clearance
 player_tray_h = player_h + bottom + player_height_clearance;
-player_trays_h = player_tray_h*2;
+player_trays_h = player_tray_h*2 + bottom*3;
+
+player_drawer_h = player_tray_h*2 + bottom*3;
 
 /* [Trays] [Crisis tray] */
 crisis_tray_l = container_l - card_box_crisis_l - player_tray_l;
@@ -176,7 +181,7 @@ module crisis_tray(){
     ocean_hex_clearance = 1.5;
     crisis_vp_tray_l = (crisis_tray_l+walls)/2;
     vp_3_w= 55;
-    vp_1_w= 33;
+    vp_1_w= 32;
     finger = 25/2;
 
     difference(){
@@ -291,7 +296,7 @@ module discovery_tray(){
                 }
                 sphere(r=discovery_clerance);
             }
-            translate([0,0,-preview_adjustment]) cylinder(h = bottom + preview_adjustment * 2, r = award_symbol_w_d/2 - discovery_clerance);
+            translate([0,0,-preview_adjustment]) cylinder(h = bottom + preview_adjustment + discovery_clerance, r = award_symbol_w_d/2 - discovery_clerance);
         }
         
         // translate([discovery_tray_l / 2 - 10, -preview_adjustment , bottom])  cube([20, 10, layer_2_height - bottom + preview_adjustment]);
@@ -313,7 +318,7 @@ module discovery_tray(){
             }
             sphere(r=discovery_clerance);
         }
-        translate([discovery_tray_l / 2, 0 ,-preview_adjustment])  cylinder(h = bottom + preview_adjustment * 2, r = milestone_symbol_w_d/2 - discovery_clerance);
+        translate([discovery_tray_l / 2, 0 ,-preview_adjustment]) cylinder(h = bottom + preview_adjustment + discovery_clerance, r = milestone_symbol_w_d/2 - discovery_clerance);
 
         // symbol tray
         // symbol_w = 22;
@@ -416,13 +421,14 @@ module money_tray(){
 // TODO Implement drawer for player tray (needs test before)
 module player_tray() {
     tray_h = player_tray_h;
-    tray_l = player_tray_l;
-    tray_w = player_tray_w;
+    tray_l = player_tray_l - walls*2;
+    tray_w = player_tray_w - walls;
     cavetto_r = player_cavetto_r;
     height_clearance = player_height_clearance;
+    drawer_clearance = layer_height;
 
     difference() {
-        cube_rounded([tray_l, tray_w, tray_h]);
+        cube_rounded([tray_l, tray_w, tray_h - drawer_clearance]);
         translate([walls + cavetto_r, walls + cavetto_r, bottom + cavetto_r + preview_adjustment]) minkowski() {
             cube([tray_l - cavetto_r*2 - walls*2, tray_w - cavetto_r*2 - walls*2, player_h + height_clearance + cavetto_r]);
             sphere(r=cavetto_r);
@@ -431,12 +437,34 @@ module player_tray() {
     }
 }
 
-module player_trays() {
-    for (i = [0:1]) {
-      for (j = [0:2]) {
-        translate([0, player_tray_w * j, (player_tray_h) * i]) player_tray();
-      }
+module players_drawer() {
+    tray_h = player_drawer_h;
+    tray_l = player_drawer_l;
+    tray_w = player_drawer_w;
+
+    difference() {
+        cube_rounded([tray_l, tray_w, tray_h]);
+        translate([walls + preview_adjustment, walls, bottom]) cube_rounded([tray_l - walls, tray_w - walls*2, player_tray_h]);
+        translate([walls + preview_adjustment, walls, player_tray_h + bottom*2]) cube_rounded([tray_l, tray_w - walls*2, player_tray_h]);
     }
+    //translate([0, 0, tray_h / 2 - bottom/2]) cube_rounded([tray_l, tray_w, bottom]); 
+}
+
+module player_trays() {
+    tray_h = player_tray_h;
+    tray_l = player_tray_l;
+    tray_w = player_tray_w;
+
+    union() {
+        players_drawer()
+        translate([walls,0, bottom]) player_tray();
+        for (i = [0:1]) {
+            for (j = [0:2]) {
+                translate([walls, tray_w * j, bottom + (tray_h + bottom) * i]) player_tray();
+            }
+        }
+    }
+    
 }
 
 
@@ -480,14 +508,19 @@ module resource_tray(size_percentage){
     resource_h_gold = 10.3;
     resource_pattern_l_count = 3;
     resource_pattern_w_count = 5;
-    tray_l = size_percentage * resource_tray_l;
+    drawer_clearance_h = layer_height;
+    drawer_clearance_l = 0.1;
+    tray_l = size_percentage * (resource_tray_l - walls*2);
+    tray_w = resource_tray_w-walls;
+    inner_resource_tray_h = resource_tray_h - bottom*2 - drawer_clearance_h;
 
     difference(){
-        cube_rounded([tray_l, resource_tray_w, resource_tray_h]);
+        cube_rounded([tray_l - drawer_clearance_l, tray_w, inner_resource_tray_h]);
         translate([walls+resource_cavetto_r, walls+resource_cavetto_r, bottom+resource_cavetto_r]) minkowski(){
-            cube([tray_l-2*(walls+resource_cavetto_r), resource_tray_w-2*(walls+resource_cavetto_r), resource_tray_h]);
+            cube([tray_l-2*(walls+resource_cavetto_r), tray_w-2*(walls+resource_cavetto_r), resource_tray_h]);
             sphere(r=resource_cavetto_r);
         }
+        translate([(tray_l - drawer_clearance_l) / 2, tray_w, inner_resource_tray_h]) sphere(r=resource_cavetto_r); 
         // TODO Maybe refactor and re-enable this
         // translate([
         //     (tray_l - h*resource_pattern_l_count - h/2*(resource_pattern_l_count-1))/2,
@@ -526,12 +559,12 @@ module resource_tray_gold(){
 }
 
 module resource_drawer() {
-    drawer_l = resource_tray_l + walls*2;
-    drawer_w = resource_tray_w + walls;
-    drawer_h = resource_tray_h + bottom*2;
+    drawer_l = resource_tray_l;
+    drawer_w = resource_tray_w;
+    drawer_h = resource_tray_h;
     difference(){
         cube_rounded([drawer_l, drawer_w, drawer_h]);
-        translate([walls, -preview_adjustment, bottom]) cube_rounded([resource_tray_l, resource_tray_w + preview_adjustment, resource_tray_h]);
+        translate([walls, walls+preview_adjustment, bottom]) cube_rounded([resource_tray_l - walls*2, resource_tray_w, resource_tray_h - bottom*2]);
         
     }
 }
@@ -550,9 +583,10 @@ if(Show == "all"){
     color("salmon") translate([crisis_tray_l,card_box_w,player_trays_h]) symbols_and_markers_tray();
 
     layer_3_offset = crisis_tray_h + layer_2_height;
-    color("gold") translate([0,card_box_w,layer_3_offset]) resource_tray_gold();
-    color("silver") translate([0 + (gold_p * resource_tray_l),card_box_w,layer_3_offset]) resource_tray_silver();
-    color("peru") translate([0 + ((gold_p + silver_p) * resource_tray_l),card_box_w,layer_3_offset]) resource_tray_bronze();
+    color("brown") translate([0,card_box_w,layer_3_offset])  resource_drawer();
+    color("gold") translate([walls,card_box_w + walls,layer_3_offset+bottom]) resource_tray_gold();
+    color("silver") translate([walls + (gold_p * (resource_tray_l - walls*2)),card_box_w + walls,layer_3_offset+bottom]) resource_tray_silver();
+    color("peru") translate([walls + ((gold_p + silver_p) * (resource_tray_l - walls*2)),card_box_w + walls,layer_3_offset+bottom]) resource_tray_bronze();
     //color("plum") translate([card_box_l-resource_l,-card_box_w,resource_tray_height(resource_h_gold)+resource_tray_height(resource_h_silver)+resource_tray_height(resource_h_bronze,2)]) symbol_tray();
 }
 
@@ -574,6 +608,10 @@ if(Show == "player_tray"){
 
 if(Show == "player_trays"){
     color("turquoise") player_trays();
+}
+
+if(Show == "players_drawer"){
+    color("grey") players_drawer();
 }
 
 if(Show == "crisis_tray"){
